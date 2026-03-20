@@ -1,0 +1,3312 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gantt-Vortex — Gantt & MPM</title>
+    <style>
+        :root {
+            --bg-dark: #1a1b2e;
+            --bg-darker: #141525;
+            --bg-card: #1e2039;
+            --bg-elevated: #252745;
+            --bg-hover: #2a2d52;
+            --bg-selected: #2f3365;
+            --text: #e2e4f0;
+            --text-light: #8b8fa8;
+            --text-muted: #5c6080;
+            --border: #2e3150;
+            --border-light: #262842;
+            --border-hover: #3d4070;
+            --input-bg: #1a1b2e;
+            --section-bg: #1c1d35;
+            --section-border: #3a3d6a;
+            --pastel-blue: #7aa2f7;
+            --pastel-purple: #b4a4de;
+            --pastel-pink: #f7a4c8;
+            --pastel-green: #9ece6a;
+            --pastel-teal: #73daca;
+            --pastel-yellow: #e0af68;
+            --pastel-orange: #e8a87c;
+            --pastel-red: #f7768e;
+            --pastel-cyan: #7dcfff;
+            --pastel-lavender: #c0a4f0;
+            --pastel-mint: #a8e6cf;
+            --pastel-peach: #f0b8a8;
+            --pastel-sky: #89b4fa;
+            --pastel-rose: #dba4c4;
+            --pastel-lime: #c3e88d;
+            --pastel-coral: #e89090;
+            --primary: var(--pastel-blue);
+            --primary-light: #90b4fa;
+            --success: var(--pastel-green);
+            --warning: var(--pastel-yellow);
+            --danger: var(--pastel-red);
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: all .2s ease;
+            --gantt-row-height: 40px;
+            --gantt-header-height: 52px;
+            --sidebar-width: 600px;
+        }
+
+        [data-theme="light"] {
+            --bg-dark: #f0f2f5;
+            --bg-darker: #e4e7ec;
+            --bg-card: #ffffff;
+            --bg-elevated: #f7f8fa;
+            --bg-hover: #eef0f4;
+            --bg-selected: #e8ecf4;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --text-muted: #94a3b8;
+            --border: #d1d5db;
+            --border-light: #e5e7eb;
+            --border-hover: #b0b6c2;
+            --input-bg: #ffffff;
+            --section-bg: #f3f4f6;
+            --section-border: #c7cad1;
+            --shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 6px 18px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            transition: background .3s, color .3s;
+        }
+
+        /* ========== HEADER ========== */
+        .app-header {
+            background: var(--bg-darker);
+            border-bottom: 1px solid var(--border);
+            padding: 0 16px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            position: relative;
+            transition: background .3s;
+        }
+
+        .app-header h1 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--pastel-blue);
+        }
+
+        .app-header h1 svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            padding: 5px 11px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 11.5px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition);
+            white-space: nowrap;
+            background: var(--bg-elevated);
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .btn svg {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-hover);
+        }
+
+        .btn-primary {
+            background: var(--pastel-blue);
+            color: #141525;
+            border-color: var(--pastel-blue);
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+            border-color: var(--primary-light);
+        }
+
+        .btn-success {
+            background: rgba(158, 206, 106, .15);
+            color: var(--pastel-green);
+            border-color: rgba(158, 206, 106, .3);
+        }
+
+        .btn-success:hover {
+            background: rgba(158, 206, 106, .25);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border-color: var(--border);
+            color: var(--text-light);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-elevated);
+            color: var(--text);
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .btn-icon {
+            padding: 4px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-light);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-elevated);
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        .btn-icon svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .btn-danger-text {
+            color: var(--pastel-red);
+        }
+
+        /* ========== TOOLBAR ========== */
+        .toolbar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 5px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            transition: background .3s;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 18px;
+            background: var(--border);
+            margin: 0 2px;
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 2px;
+            background: var(--bg-darker);
+            border-radius: var(--radius);
+            padding: 2px;
+            border: 1px solid var(--border);
+        }
+
+        .zoom-controls .btn {
+            padding: 3px 9px;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            border-radius: 5px;
+            font-size: 10.5px;
+        }
+
+        .zoom-controls .btn:hover {
+            background: var(--bg-elevated);
+            color: var(--text);
+        }
+
+        .zoom-controls .btn.active {
+            background: var(--bg-elevated);
+            color: var(--pastel-blue);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+        }
+
+        .zoom-label {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .project-name-input {
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius);
+            background: transparent;
+            color: var(--text);
+            min-width: 140px;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .project-name-input:hover {
+            border-color: var(--border);
+            background: var(--bg-elevated);
+        }
+
+        .project-name-input:focus {
+            outline: none;
+            border-color: var(--pastel-blue);
+            background: var(--bg-elevated);
+        }
+
+        /* ========== VIEW TABS ========== */
+        .view-tabs {
+            display: flex;
+            gap: 2px;
+            background: var(--bg-darker);
+            border-radius: var(--radius);
+            padding: 2px;
+            border: 1px solid var(--border);
+        }
+
+        .view-tab {
+            padding: 4px 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            border-radius: 5px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .view-tab:hover {
+            background: var(--bg-elevated);
+            color: var(--text);
+        }
+
+        .view-tab.active {
+            background: var(--bg-elevated);
+            color: var(--pastel-blue);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+        }
+
+        /* ========== MAIN ========== */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 48px - 36px);
+            overflow: hidden;
+        }
+
+        /* ========== TABLE PANEL ========== */
+        .table-panel {
+            width: var(--sidebar-width);
+            min-width: 380px;
+            max-width: 800px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: background .3s;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 26px 16px 1fr 82px 82px 44px 88px 28px;
+            gap: 0;
+            padding: 0 3px;
+            background: var(--bg-darker);
+            border-bottom: 1px solid var(--border);
+            height: var(--gantt-header-height);
+            align-items: center;
+            font-size: 9.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table-header>div {
+            padding: 0 2px;
+            user-select: none;
+        }
+
+        .table-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .section-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 7px;
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--section-border);
+            border-top: 1px solid var(--section-border);
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--pastel-purple);
+            cursor: pointer;
+            user-select: none;
+            transition: background .15s;
+        }
+
+        .section-row:hover {
+            background: var(--bg-hover);
+        }
+
+        .section-row svg {
+            width: 13px;
+            height: 13px;
+            transition: transform .2s;
+        }
+
+        .section-row.collapsed svg {
+            transform: rotate(-90deg);
+        }
+
+        .section-row .sec-name {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            padding: 2px 4px;
+            border-radius: 4px;
+            cursor: text;
+        }
+
+        .section-row .sec-name:focus {
+            outline: none;
+            background: var(--bg-elevated);
+        }
+
+        .sec-actions {
+            display: flex;
+            gap: 2px;
+            opacity: 0;
+            transition: opacity .15s;
+        }
+
+        .section-row:hover .sec-actions {
+            opacity: 1;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 26px 16px 1fr 82px 82px 44px 88px 28px;
+            gap: 0;
+            padding: 0 3px;
+            border-bottom: 1px solid var(--border-light);
+            min-height: var(--gantt-row-height);
+            align-items: center;
+            transition: background .1s;
+            cursor: pointer;
+        }
+
+        .table-row:hover {
+            background: var(--bg-hover);
+        }
+
+        .table-row.selected {
+            background: var(--bg-selected);
+            box-shadow: inset 3px 0 0 var(--pastel-blue);
+        }
+
+        .table-row.drag-over {
+            box-shadow: inset 0 -2px 0 var(--pastel-blue);
+        }
+
+        .table-row input,
+        .table-row select {
+            width: 100%;
+            border: 1px solid transparent;
+            padding: 3px 4px;
+            font-size: 11.5px;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text);
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .table-row input:hover {
+            border-color: var(--border);
+            background: var(--input-bg);
+        }
+
+        .table-row input:focus {
+            outline: none;
+            border-color: var(--pastel-blue);
+            background: var(--input-bg);
+            box-shadow: 0 0 0 2px rgba(122, 162, 247, .1);
+        }
+
+        .table-row input[type="date"] {
+            font-size: 10px;
+            color: var(--text-light);
+        }
+
+        .table-row input:disabled {
+            opacity: .2;
+            cursor: not-allowed;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: .2;
+            transition: opacity .15s;
+            padding: 2px;
+        }
+
+        .table-row:hover .drag-handle {
+            opacity: .7;
+        }
+
+        .drag-handle svg {
+            width: 11px;
+            height: 11px;
+        }
+
+        .color-dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .color-dot:hover {
+            transform: scale(1.3);
+            border-color: rgba(255, 255, 255, .2);
+        }
+
+        .date-cell {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .date-lock {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+            background: var(--input-bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .date-lock:hover {
+            border-color: var(--pastel-blue);
+        }
+
+        .date-lock.active {
+            background: var(--pastel-blue);
+            border-color: var(--pastel-blue);
+        }
+
+        .date-lock svg {
+            width: 8px;
+            height: 8px;
+            color: white;
+            display: none;
+        }
+
+        .date-lock.active svg {
+            display: block;
+        }
+
+        .dep-display {
+            display: flex;
+            gap: 2px;
+            flex-wrap: wrap;
+            min-height: 18px;
+            align-items: center;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 4px;
+            transition: background .15s;
+        }
+
+        .dep-display:hover {
+            background: var(--input-bg);
+        }
+
+        .dep-tag {
+            background: rgba(122, 162, 247, .15);
+            color: var(--pastel-blue);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .dep-none {
+            font-size: 9.5px;
+            color: var(--text-muted);
+        }
+
+        .row-del {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 2px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .table-row:hover .row-del {
+            opacity: 1;
+        }
+
+        .row-del:hover {
+            background: rgba(247, 118, 142, .15);
+            color: var(--pastel-red);
+        }
+
+        .add-row {
+            padding: 5px 8px;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 7px;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 11.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .add-btn:hover {
+            border-color: var(--pastel-blue);
+            color: var(--pastel-blue);
+            background: rgba(122, 162, 247, .04);
+        }
+
+        /* ========== RESIZER ========== */
+        .panel-resizer {
+            width: 3px;
+            background: var(--border);
+            cursor: col-resize;
+            transition: background .2s;
+            z-index: 5;
+        }
+
+        .panel-resizer:hover,
+        .panel-resizer.active {
+            background: var(--pastel-blue);
+        }
+
+        /* ========== GANTT PANEL ========== */
+        .gantt-panel {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            background: var(--bg-card);
+            transition: background .3s;
+        }
+
+        .gantt-container {
+            position: relative;
+            min-height: 100%;
+        }
+
+        .gantt-timeline-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg-darker);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .gantt-header-row {
+            display: flex;
+            height: 26px;
+            align-items: center;
+        }
+
+        .gantt-header-cell {
+            text-align: center;
+            font-size: 9.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border-light);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .gantt-header-cell.weekend {
+            background: rgba(247, 118, 142, .04);
+            color: var(--pastel-red);
+            opacity: .7;
+        }
+
+        .gantt-header-cell.today-h {
+            background: rgba(122, 162, 247, .1);
+            color: var(--pastel-blue);
+        }
+
+        .gantt-header-cell.month-h {
+            font-size: 10.5px;
+            color: var(--text-light);
+            border-right: 1px solid var(--border);
+            letter-spacing: .3px;
+        }
+
+        .gantt-body {
+            position: relative;
+        }
+
+        .gantt-grid-row {
+            height: var(--gantt-row-height);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+        }
+
+        .gantt-grid-row.sec-spacer {
+            height: 31px;
+            background: var(--section-bg);
+        }
+
+        .gantt-cell {
+            height: 100%;
+            border-right: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+
+        .gantt-cell.weekend {
+            background: rgba(247, 118, 142, .025);
+        }
+
+        .gantt-cell.today-c {
+            background: rgba(122, 162, 247, .05);
+        }
+
+        .gantt-bars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .gantt-bar-wrap {
+            position: absolute;
+            height: var(--gantt-row-height);
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+            pointer-events: all;
+        }
+
+        .gantt-bar {
+            height: 28px;
+            border-radius: 6px;
+            position: relative;
+            cursor: grab;
+            transition: box-shadow .15s, transform .1s;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            min-width: 8px;
+        }
+
+        .gantt-bar:hover {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .25);
+            transform: translateY(-1px);
+        }
+
+        .gantt-bar:active {
+            cursor: grabbing;
+        }
+
+        .gantt-bar-label {
+            font-size: 10px;
+            color: #141525;
+            padding: 0 7px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            z-index: 1;
+            font-weight: 600;
+        }
+
+        [data-theme="light"] .gantt-bar-label {
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+        }
+
+        .gantt-resize {
+            position: absolute;
+            top: 0;
+            width: 8px;
+            height: 100%;
+            cursor: ew-resize;
+            z-index: 2;
+        }
+
+        .gantt-resize.l {
+            left: 0;
+            border-radius: 6px 0 0 6px;
+        }
+
+        .gantt-resize.r {
+            right: 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .gantt-resize:hover {
+            background: rgba(0, 0, 0, .12);
+        }
+
+        .today-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--pastel-red);
+            z-index: 5;
+            pointer-events: none;
+            opacity: .6;
+        }
+
+        .dep-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .dep-path {
+            fill: none;
+            stroke: var(--text-muted);
+            stroke-width: 1.5;
+            opacity: .5;
+        }
+
+        .dep-arrowhead {
+            fill: var(--text-muted);
+            opacity: .5;
+        }
+
+        /* ========== MPM PANEL ========== */
+        .mpm-panel {
+            flex: 1;
+            overflow: auto;
+            background: var(--bg-card);
+            padding: 20px;
+            display: none;
+            transition: background .3s;
+        }
+
+        .mpm-panel.active {
+            display: block;
+        }
+
+        .mpm-canvas {
+            position: relative;
+            min-width: 100%;
+            min-height: 100%;
+        }
+
+        .mpm-node {
+            position: absolute;
+            width: 140px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-elevated);
+            box-shadow: var(--shadow);
+            cursor: default;
+            user-select: none;
+            transition: box-shadow .2s, border-color .2s;
+        }
+
+        .mpm-node:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--border-hover);
+        }
+
+        .mpm-node-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .mpm-node-header>div {
+            padding: 6px 8px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .mpm-node-header>div:first-child {
+            border-right: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .mpm-node-header>div:last-child {
+            color: var(--pastel-teal);
+        }
+
+        .mpm-node-body {
+            padding: 6px 8px;
+            text-align: center;
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mpm-node-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10.5px;
+        }
+
+        .mpm-node-footer>div {
+            padding: 5px 8px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .mpm-node-footer>div:first-child {
+            border-right: 1px solid var(--border);
+            color: var(--pastel-orange);
+        }
+
+        .mpm-node-footer>div:last-child {
+            font-weight: 700;
+        }
+
+        .mpm-node-footer .marge-zero {
+            color: var(--pastel-red);
+        }
+
+        .mpm-node-footer .marge-pos {
+            color: var(--pastel-green);
+        }
+
+        .mpm-node.critical {
+            border-color: var(--pastel-red);
+            box-shadow: 0 0 0 2px rgba(247, 118, 142, .2);
+        }
+
+        .mpm-legend {
+            position: sticky;
+            top: 0;
+            background: var(--bg-card);
+            padding: 8px 0 16px;
+            z-index: 5;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .mpm-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        .mpm-legend-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            border: 2px solid var(--border);
+        }
+
+        .mpm-legend-box.crit {
+            border-color: var(--pastel-red);
+            background: rgba(247, 118, 142, .1);
+        }
+
+        .mpm-arrow-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, .55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all .2s ease;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 92%;
+            max-width: 440px;
+            max-height: 82vh;
+            overflow-y: auto;
+            transform: translateY(14px) scale(.98);
+            transition: transform .2s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 3px;
+            border-radius: 4px;
+            display: flex;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-elevated);
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 18px;
+        }
+
+        .modal-footer {
+            padding: 12px 18px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 11px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-bottom: 3px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 6px 9px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 12.5px;
+            color: var(--text);
+            background: var(--input-bg);
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--pastel-blue);
+            box-shadow: 0 0 0 3px rgba(122, 162, 247, .1);
+        }
+
+        .form-group select[multiple] {
+            min-height: 75px;
+        }
+
+        .form-group select option {
+            background: var(--input-bg);
+            color: var(--text);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+        }
+
+        .color-opts {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .color-opt {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .color-opt:hover {
+            transform: scale(1.2);
+        }
+
+        .color-opt.sel {
+            border-color: var(--text);
+            box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px rgba(255, 255, 255, .3);
+            transform: scale(1.1);
+        }
+
+        /* ========== SETTINGS ========== */
+        .settings-group {
+            margin-bottom: 16px;
+        }
+
+        .settings-group h4 {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 7px;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+
+        .toggle-row span {
+            font-size: 12.5px;
+        }
+
+        .toggle-switch {
+            width: 34px;
+            height: 18px;
+            background: var(--border);
+            border-radius: 9px;
+            cursor: pointer;
+            position: relative;
+            transition: background .2s;
+        }
+
+        .toggle-switch.on {
+            background: var(--pastel-blue);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            transition: transform .2s;
+        }
+
+        .toggle-switch.on::after {
+            transform: translateX(16px);
+        }
+
+        .day-chips {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .day-chip {
+            padding: 3px 9px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-elevated);
+            color: var(--text-light);
+            user-select: none;
+        }
+
+        .day-chip:hover {
+            border-color: var(--border-hover);
+        }
+
+        .day-chip.active {
+            background: rgba(247, 118, 142, .15);
+            border-color: rgba(247, 118, 142, .4);
+            color: var(--pastel-red);
+        }
+
+        /* ========== DROPDOWN / POPUP ========== */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            min-width: 155px;
+            padding: 3px;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-5px);
+            transition: all .15s ease;
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(3px);
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            padding: 6px 9px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 11.5px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+            font-family: inherit;
+            transition: background .1s;
+        }
+
+        .dropdown-menu button:hover {
+            background: var(--bg-elevated);
+        }
+
+        .dropdown-menu button svg {
+            width: 13px;
+            height: 13px;
+            color: var(--text-light);
+            flex-shrink: 0;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 3px 0;
+        }
+
+        .popup {
+            position: fixed;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 500;
+            display: none;
+        }
+
+        .popup.visible {
+            display: block;
+        }
+
+        .dep-popup {
+            padding: 5px;
+            min-width: 160px;
+            max-height: 190px;
+            overflow-y: auto;
+        }
+
+        .dep-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            color: var(--text);
+            transition: background .1s;
+        }
+
+        .dep-item:hover {
+            background: var(--bg-elevated);
+        }
+
+        .dep-item input[type="checkbox"] {
+            accent-color: var(--pastel-blue);
+            width: 12px;
+            height: 12px;
+            cursor: pointer;
+        }
+
+        .color-popup {
+            padding: 7px;
+        }
+
+        .color-popup-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+
+        .color-popup-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .color-popup-dot:hover {
+            transform: scale(1.2);
+            border-color: rgba(255, 255, 255, .2);
+        }
+
+        /* ========== CONTEXT ========== */
+        .ctx-menu {
+            position: fixed;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            min-width: 150px;
+            padding: 3px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .ctx-menu.visible {
+            display: block;
+        }
+
+        .ctx-menu button {
+            width: 100%;
+            padding: 5px 9px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 11.5px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .ctx-menu button:hover {
+            background: var(--bg-elevated);
+        }
+
+        /* ========== TOOLTIP ========== */
+        .bar-tooltip {
+            position: fixed;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 7px 10px;
+            font-size: 11px;
+            color: var(--text);
+            box-shadow: var(--shadow-lg);
+            z-index: 600;
+            pointer-events: none;
+            max-width: 220px;
+            display: none;
+        }
+
+        .bar-tooltip.visible {
+            display: block;
+        }
+
+        .bar-tooltip .tt-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .bar-tooltip .tt-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            color: var(--text-light);
+            font-size: 10.5px;
+        }
+
+        /* ========== EMPTY ========== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 42px;
+            height: 42px;
+            margin-bottom: 8px;
+            opacity: .2;
+        }
+
+        .empty-state h3 {
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: var(--text-light);
+        }
+
+        .empty-state p {
+            font-size: 11.5px;
+            margin-bottom: 12px;
+        }
+
+        /* ========== TOASTS ========== */
+        .toast-box {
+            position: fixed;
+            bottom: 14px;
+            right: 14px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .toast {
+            background: var(--bg-elevated);
+            color: var(--text);
+            padding: 7px 12px;
+            border-radius: var(--radius);
+            font-size: 11.5px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            animation: tIn .2s ease;
+            border: 1px solid var(--border);
+            max-width: 260px;
+        }
+
+        .toast.success {
+            border-color: var(--pastel-green);
+            color: var(--pastel-green);
+        }
+
+        .toast.error {
+            border-color: var(--pastel-red);
+            color: var(--pastel-red);
+        }
+
+        .toast.warning {
+            border-color: var(--pastel-yellow);
+            color: var(--pastel-yellow);
+        }
+
+        @keyframes tIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes tOut {
+            from {
+                opacity: 1
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-8px)
+            }
+        }
+
+        /* ========== SCROLLBAR ========== */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-darker);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ==============================================
+   MOBILE RESPONSIVE
+   ============================================== */
+        .mobile-nav {
+            display: none;
+        }
+
+        @media(max-width:768px) {
+            .app-header h1 span.desktop-title {
+                display: none;
+            }
+
+            .toolbar .desktop-only {
+                display: none !important;
+            }
+
+            .main-container {
+                flex-direction: column;
+                position: relative;
+            }
+
+            .table-panel {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                display: none;
+                height: 100%;
+            }
+
+            .table-panel.mob-active {
+                display: flex;
+            }
+
+            .panel-resizer {
+                display: none !important;
+            }
+
+            .gantt-panel {
+                display: none;
+                height: 100%;
+            }
+
+            .gantt-panel.mob-active {
+                display: block;
+            }
+
+            .mpm-panel {
+                display: none !important;
+                height: 100%;
+            }
+
+            .mpm-panel.mob-active {
+                display: block !important;
+            }
+
+            .table-header {
+                grid-template-columns: 20px 14px 1fr 42px 80px 24px;
+                font-size: 8.5px;
+            }
+
+            .table-row {
+                grid-template-columns: 20px 14px 1fr 42px 80px 24px;
+            }
+
+            .table-row .mob-hide {
+                display: none;
+            }
+
+            .table-header .mob-hide {
+                display: none;
+            }
+
+            .mobile-nav {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--bg-darker);
+                border-top: 1px solid var(--border);
+                z-index: 200;
+                padding: 4px 0;
+                justify-content: space-around;
+            }
+
+            .mob-nav-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                border: none;
+                background: none;
+                color: var(--text-muted);
+                font-size: 9px;
+                font-family: inherit;
+                cursor: pointer;
+                padding: 6px 12px;
+                border-radius: 8px;
+                transition: var(--transition);
+            }
+
+            .mob-nav-btn.active {
+                color: var(--pastel-blue);
+                background: rgba(122, 162, 247, .1);
+            }
+
+            .mob-nav-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .main-container {
+                height: calc(100vh - 48px - 36px - 52px);
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="dark">
+
+    <header class="app-header">
+        <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="4" rx="1" />
+                <rect x="3" y="10" width="12" height="4" rx="1" />
+                <rect x="3" y="16" width="15" height="4" rx="1" />
+            </svg>
+            <span class="desktop-title">Gantt-Vortex</span>
+        </h1>
+        <div class="header-actions">
+            <button class="btn-icon" onclick="undo()" title="Ctrl+Z"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1,4 1,10 7,10" />
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                </svg></button>
+            <button class="btn-icon" onclick="redo()" title="Ctrl+Y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23,4 23,10 17,10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10" />
+                </svg></button>
+            <div class="toolbar-separator"></div>
+            <button class="btn btn-ghost btn-sm" onclick="saveLS()" title="Ctrl+S"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                    <polyline points="17,21 17,13 7,13 7,21" />
+                    <polyline points="7,3 7,8 15,8" />
+                </svg><span class="desktop-only">Sauver</span></button>
+            <div class="dropdown">
+                <button class="btn btn-ghost btn-sm" onclick="toggleDD('dd-imp')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7,10 12,15 17,10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg><span class="desktop-only">Import</span></button>
+                <div class="dropdown-menu" id="dd-imp">
+                    <button onclick="pickF('csv')">CSV</button>
+                    <button onclick="pickF('json')">JSON</button>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-primary btn-sm" onclick="toggleDD('dd-exp')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="17,8 12,3 7,8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg><span class="desktop-only">Export</span></button>
+                <div class="dropdown-menu" id="dd-exp">
+                    <button onclick="doExp('csv')">CSV</button><button onclick="doExp('json')">JSON</button><button onclick="doExp('excel')">Excel</button>
+                    <div class="dropdown-divider"></div><button onclick="doExp('png')">PNG</button>
+                </div>
+            </div>
+            <div class="toolbar-separator"></div>
+            <button class="btn-icon" onclick="openSet()" title="Paramètres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg></button>
+        </div>
+    </header>
+
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <input type="text" class="project-name-input" id="projName" value="Mon Projet" onchange="S.projectName=this.value;save()">
+            <div class="toolbar-separator desktop-only"></div>
+            <button class="btn btn-success btn-sm" onclick="addTask()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>Tâche</button>
+            <button class="btn btn-sm desktop-only" style="color:var(--pastel-purple);border-color:rgba(180,164,222,.3);background:rgba(180,164,222,.08)" onclick="addSec()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="7" rx="1" />
+                    <rect x="3" y="14" width="18" height="7" rx="1" />
+                </svg>Section</button>
+        </div>
+        <div class="toolbar-group">
+            <div class="view-tabs desktop-only">
+                <button class="view-tab active" onclick="setView('gantt')" id="vt-gantt">Gantt</button>
+                <button class="view-tab" onclick="setView('mpm')" id="vt-mpm">MPM</button>
+            </div>
+            <div class="toolbar-separator desktop-only"></div>
+            <span class="zoom-label desktop-only">Zoom</span>
+            <div class="zoom-controls desktop-only">
+                <button class="btn" onclick="setZoom('day')" id="z-day">J</button>
+                <button class="btn active" onclick="setZoom('week')" id="z-week">S</button>
+                <button class="btn" onclick="setZoom('month')" id="z-month">M</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container" id="mainCont">
+        <div class="table-panel mob-active" id="tblPanel">
+            <div class="table-header">
+                <div></div>
+                <div></div>
+                <div>Tâche</div>
+                <div class="mob-hide">Début</div>
+                <div class="mob-hide">Fin</div>
+                <div>Jrs</div>
+                <div class="mob-hide">Antéc.</div>
+                <div></div>
+            </div>
+            <div class="table-body" id="tblBody"></div>
+            <div class="add-row"><button class="add-btn" onclick="addTask()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>Ajouter</button></div>
+        </div>
+        <div class="panel-resizer" id="resizer"></div>
+        <div class="gantt-panel" id="ganttPanel">
+            <div class="gantt-container" id="ganttCont">
+                <div class="gantt-timeline-header" id="ganttHead"></div>
+                <div class="gantt-body" id="ganttBody"></div>
+            </div>
+        </div>
+        <div class="mpm-panel" id="mpmPanel"></div>
+    </div>
+
+    <!-- Mobile bottom nav -->
+    <div class="mobile-nav" id="mobNav">
+        <button class="mob-nav-btn active" onclick="setMobView('tasks')" id="mn-tasks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6" />
+                <line x1="8" y1="12" x2="21" y2="12" />
+                <line x1="8" y1="18" x2="21" y2="18" />
+                <line x1="3" y1="6" x2="3.01" y2="6" />
+                <line x1="3" y1="12" x2="3.01" y2="12" />
+                <line x1="3" y1="18" x2="3.01" y2="18" />
+            </svg>Tâches
+        </button>
+        <button class="mob-nav-btn" onclick="setMobView('gantt')" id="mn-gantt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="4" rx="1" />
+                <rect x="3" y="10" width="12" height="4" rx="1" />
+                <rect x="3" y="16" width="15" height="4" rx="1" />
+            </svg>Gantt
+        </button>
+        <button class="mob-nav-btn" onclick="setMobView('mpm')" id="mn-mpm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="8" height="8" rx="1" />
+                <rect x="14" y="3" width="8" height="8" rx="1" />
+                <rect x="8" y="13" width="8" height="8" rx="1" />
+                <line x1="6" y1="11" x2="12" y2="13" />
+                <line x1="18" y1="11" x2="12" y2="13" />
+            </svg>MPM
+        </button>
+    </div>
+
+    <div class="ctx-menu" id="ctxMenu">
+        <button onclick="editMod(CTX)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>Modifier</button>
+        <button onclick="dupT(CTX)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+            </svg>Dupliquer</button>
+        <div class="dropdown-divider"></div>
+        <button onclick="delT(CTX)" class="btn-danger-text"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6" />
+                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+            </svg>Supprimer</button>
+    </div>
+    <div class="popup dep-popup" id="depPop"></div>
+    <div class="popup color-popup" id="colPop"></div>
+    <div class="bar-tooltip" id="tooltip"></div>
+
+    <div class="modal-overlay" id="modOvl">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modTitle">Modifier</h3><button class="modal-close" onclick="closeMod()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg></button>
+            </div>
+            <div class="modal-body"><input type="hidden" id="modId">
+                <div class="form-group"><label>Nom</label><input type="text" id="modName"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Début</label><input type="date" id="modStart"></div>
+                    <div class="form-group"><label>Fin</label><input type="date" id="modEnd"></div>
+                </div>
+                <div class="form-group"><label>Durée (jours ouvrés)</label><input type="number" id="modDur" min="1"></div>
+                <div class="form-group"><label>Section</label><select id="modSec"></select></div>
+                <div class="form-group"><label>Antécédents</label><select id="modDeps" multiple></select></div>
+                <div class="form-group"><label>Couleur</label>
+                    <div class="color-opts" id="modCols"></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMod()">Annuler</button><button class="btn btn-primary" onclick="saveMod()">OK</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="setOvl">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Paramètres</h3><button class="modal-close" onclick="closeSet()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg></button>
+            </div>
+            <div class="modal-body" id="setBody"></div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="closeSet()">Fermer</button></div>
+        </div>
+    </div>
+
+    <div class="toast-box" id="toastBox"></div>
+    <input type="file" class="hidden" id="fileIn" onchange="handleImp(event)">
+
+    <script>
+        const COLORS = ['#7aa2f7', '#b4a4de', '#f7a4c8', '#9ece6a', '#73daca', '#e0af68', '#e8a87c', '#f7768e', '#7dcfff', '#c0a4f0', '#a8e6cf', '#f0b8a8', '#89b4fa', '#dba4c4', '#c3e88d', '#e89090'];
+        const DAYS_FULL = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+        const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+        let S = {
+            projectName: 'Mon Projet',
+            tasks: [],
+            sections: [{
+                id: 1,
+                name: 'Général',
+                collapsed: false
+            }],
+            zoom: 'week',
+            nextId: 1,
+            nextSec: 2,
+            selId: null,
+            view: 'gantt',
+            settings: {
+                weekendDays: [5, 6],
+                theme: 'dark'
+            }
+        };
+        let undoS = [],
+            redoS = [],
+            CTX = null,
+            cellW = 18,
+            dragD = null,
+            impType = 'csv',
+            mobView = 'tasks';
+
+        function init() {
+            loadLS();
+            applyTheme();
+            setupResize();
+            setupScrollSync();
+            setupKeys();
+            setupClicks();
+            recalc();
+            render();
+            setInterval(() => {
+                try {
+                    localStorage.setItem('gf', JSON.stringify(S))
+                } catch (e) {}
+            }, 20000);
+        }
+
+        /* === Date utils === */
+        function fmt(d) {
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+        }
+
+        function pD(s) {
+            if (!s) return null;
+            const d = new Date(s + 'T00:00:00');
+            return isNaN(d) ? null : d;
+        }
+
+        function td() {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        function isWE(d) {
+            const j = d.getDay();
+            return S.settings.weekendDays.includes(j === 0 ? 6 : j - 1);
+        }
+
+        function addWD(s, n) {
+            let d = new Date(s),
+                c = 0;
+            while (c < n - 1) {
+                d.setDate(d.getDate() + 1);
+                if (!isWE(d)) c++;
+            }
+            return d;
+        }
+
+        function wdBetween(a, b) {
+            let d = new Date(a),
+                c = 1;
+            while (d < b) {
+                d.setDate(d.getDate() + 1);
+                if (!isWE(d)) c++;
+            }
+            return Math.max(1, c);
+        }
+
+        function pStart() {
+            return new Date(new Date().getFullYear(), 0, 1);
+        }
+
+        /* === Recalculation === */
+        function recalc() {
+            const m = {};
+            S.tasks.forEach(t => m[t.id] = t);
+            S.tasks.forEach(t => {
+                t._s = null;
+                t._e = null;
+            });
+            const done = new Set(),
+                doing = new Set();
+
+            function res(t) {
+                if (done.has(t.id) || doing.has(t.id)) return;
+                doing.add(t.id);
+                (t.deps || []).forEach(d => {
+                    if (m[d] && !done.has(d)) res(m[d]);
+                });
+                if (t.dateEnabled && t.mStart) {
+                    let s = pD(t.mStart),
+                        e = t.mEnd ? pD(t.mEnd) : addWD(s, t.dur || 1);
+                    const c = earliest(t, m);
+                    if (c && s < c) {
+                        s = new Date(c);
+                        e = addWD(s, t.dur || 1);
+                    }
+                    t._s = fmt(s);
+                    t._e = fmt(e);
+                } else {
+                    let b = earliest(t, m) || pStart();
+                    while (isWE(b)) b.setDate(b.getDate() + 1);
+                    const e = addWD(b, t.dur || 1);
+                    t._s = fmt(b);
+                    t._e = fmt(e);
+                }
+                done.add(t.id);
+                doing.delete(t.id);
+            }
+            S.tasks.forEach(t => res(t));
+            calcMPM();
+        }
+
+        function earliest(t, m) {
+            if (!t.deps || !t.deps.length) return null;
+            let lat = null;
+            t.deps.forEach(d => {
+                const dep = m[d];
+                if (dep && dep._e) {
+                    let x = pD(dep._e);
+                    x.setDate(x.getDate() + 1);
+                    while (isWE(x)) x.setDate(x.getDate() + 1);
+                    if (!lat || x > lat) lat = new Date(x);
+                }
+            });
+            return lat;
+        }
+
+        function hasCycle(tid, did) {
+            const m = {};
+            S.tasks.forEach(t => m[t.id] = t);
+            const v = (id, s) => {
+                if (id === tid) return true;
+                if (s.has(id)) return false;
+                s.add(id);
+                const t = m[id];
+                return t ? (t.deps || []).some(d => v(d, s)) : false;
+            };
+            return v(did, new Set());
+        }
+
+        function canStart(t, date) {
+            const m = {};
+            S.tasks.forEach(x => m[x.id] = x);
+            const e = earliest(t, m);
+            return !e || date >= e;
+        }
+
+        /* === MPM Calculation === */
+        function calcMPM() {
+            const tasks = S.tasks;
+            if (!tasks.length) return;
+            const m = {};
+            tasks.forEach(t => m[t.id] = t);
+            // Forward pass: ES, EF
+            tasks.forEach(t => {
+                let es = 0;
+                (t.deps || []).forEach(d => {
+                    const dep = m[d];
+                    if (dep && dep._ef !== undefined) es = Math.max(es, dep._ef);
+                });
+                t._es = es;
+                t._ef = es + (t.dur || 1);
+            });
+            // Project end
+            let projEnd = 0;
+            tasks.forEach(t => {
+                if (t._ef > projEnd) projEnd = t._ef;
+            });
+            // Backward pass: LS, LF
+            // Start from tasks with no successors
+            const succs = {};
+            tasks.forEach(t => {
+                (t.deps || []).forEach(d => {
+                    if (!succs[d]) succs[d] = [];
+                    succs[d].push(t.id);
+                });
+            });
+            tasks.forEach(t => {
+                t._lf = projEnd;
+                t._ls = projEnd - (t.dur || 1);
+            });
+            // Reverse topological
+            const revOrder = [...tasks].reverse();
+            // Multiple passes to converge
+            for (let p = 0; p < tasks.length; p++) {
+                tasks.forEach(t => {
+                    const ss = succs[t.id];
+                    if (ss && ss.length) {
+                        let minLs = Infinity;
+                        ss.forEach(sid => {
+                            const st = m[sid];
+                            if (st && st._ls < minLs) minLs = st._ls;
+                        });
+                        t._lf = minLs;
+                        t._ls = t._lf - (t.dur || 1);
+                    } else {
+                        t._lf = projEnd;
+                        t._ls = projEnd - (t.dur || 1);
+                    }
+                });
+            }
+            // Margin
+            tasks.forEach(t => {
+                t._margin = t._ls - t._es;
+            });
+        }
+
+        /* === Task ops === */
+        function pushU() {
+            undoS.push(JSON.stringify(S));
+            if (undoS.length > 50) undoS.shift();
+            redoS = [];
+        }
+
+        function addTask(sid) {
+            pushU();
+            const sec = sid || S.sections[0]?.id || 1;
+            S.tasks.push({
+                id: S.nextId++,
+                name: 'Nouvelle tâche',
+                dateEnabled: false,
+                mStart: '',
+                mEnd: '',
+                dur: 5,
+                deps: [],
+                color: COLORS[S.tasks.length % COLORS.length],
+                sectionId: sec,
+                _s: null,
+                _e: null
+            });
+            recalc();
+            save();
+            render();
+            toast('Tâche ajoutée', 'success');
+        }
+
+        function delT(id) {
+            pushU();
+            S.tasks.forEach(t => {
+                t.deps = (t.deps || []).filter(d => d !== id);
+            });
+            S.tasks = S.tasks.filter(t => t.id !== id);
+            if (S.selId === id) S.selId = null;
+            recalc();
+            save();
+            render();
+            hideCtx();
+            toast('Supprimée', 'error');
+        }
+
+        function dupT(id) {
+            pushU();
+            const o = S.tasks.find(t => t.id === id);
+            if (!o) return;
+            const n = {
+                ...JSON.parse(JSON.stringify(o)),
+                id: S.nextId++,
+                name: o.name + ' (copie)'
+            };
+            S.tasks.splice(S.tasks.indexOf(o) + 1, 0, n);
+            recalc();
+            save();
+            render();
+            hideCtx();
+            toast('Dupliquée', 'success');
+        }
+
+        function updT(id, f, v) {
+            pushU();
+            const t = S.tasks.find(x => x.id === id);
+            if (!t) return;
+            if (f === 'dur') {
+                t.dur = Math.max(1, parseInt(v) || 1);
+                if (t.dateEnabled && t.mStart) t.mEnd = fmt(addWD(pD(t.mStart), t.dur));
+            } else if (f === 'mStart') {
+                t.mStart = v;
+                if (v && t.mEnd) {
+                    if (pD(v) > pD(t.mEnd)) t.mEnd = v;
+                    t.dur = wdBetween(pD(t.mStart), pD(t.mEnd));
+                }
+            } else if (f === 'mEnd') {
+                t.mEnd = v;
+                if (v && t.mStart) {
+                    if (pD(v) < pD(t.mStart)) t.mStart = v;
+                    t.dur = wdBetween(pD(t.mStart), pD(t.mEnd));
+                }
+            } else t[f] = v;
+            recalc();
+            save();
+            render();
+        }
+
+        function togDate(id) {
+            const t = S.tasks.find(x => x.id === id);
+            if (!t) return;
+            pushU();
+            t.dateEnabled = !t.dateEnabled;
+            if (t.dateEnabled && !t.mStart) {
+                t.mStart = t._s || fmt(pStart());
+                t.mEnd = t._e || fmt(addWD(pD(t.mStart), t.dur || 1));
+            }
+            recalc();
+            save();
+            render();
+        }
+
+        function moveT(fi, ti, sec) {
+            pushU();
+            const [mv] = S.tasks.splice(fi, 1);
+            if (sec !== undefined) mv.sectionId = sec;
+            S.tasks.splice(Math.min(ti, S.tasks.length), 0, mv);
+            recalc();
+            save();
+            render();
+        }
+
+        /* === Section ops === */
+        function addSec() {
+            pushU();
+            S.sections.push({
+                id: S.nextSec++,
+                name: 'Nouvelle section',
+                collapsed: false
+            });
+            save();
+            render();
+            toast('Section ajoutée', 'success');
+        }
+
+        function delSec(id) {
+            pushU();
+            S.tasks.forEach(t => {
+                if (t.sectionId === id) t.sectionId = S.sections.find(s => s.id !== id)?.id || 0;
+            });
+            S.sections = S.sections.filter(s => s.id !== id);
+            save();
+            render();
+        }
+
+        function togSec(id) {
+            const s = S.sections.find(x => x.id === id);
+            if (s) s.collapsed = !s.collapsed;
+            render();
+        }
+
+        /* === Views === */
+        function setView(v) {
+            S.view = v;
+            document.querySelectorAll('.view-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('vt-' + v)?.classList.add('active');
+            const gp = document.getElementById('ganttPanel'),
+                mp = document.getElementById('mpmPanel');
+            if (v === 'gantt') {
+                gp.style.display = '';
+                mp.style.display = 'none';
+                mp.classList.remove('active');
+            } else {
+                gp.style.display = 'none';
+                mp.style.display = 'block';
+                mp.classList.add('active');
+                renderMPM();
+            }
+            render();
+        }
+
+        function setMobView(v) {
+            mobView = v;
+            document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('mn-' + v)?.classList.add('active');
+            const tp = document.getElementById('tblPanel'),
+                gp = document.getElementById('ganttPanel'),
+                mp = document.getElementById('mpmPanel');
+            tp.classList.remove('mob-active');
+            gp.classList.remove('mob-active');
+            mp.classList.remove('mob-active');
+            if (v === 'tasks') tp.classList.add('mob-active');
+            else if (v === 'gantt') {
+                gp.classList.add('mob-active');
+                render();
+            } else {
+                mp.classList.add('mob-active');
+                renderMPM();
+            }
+        }
+
+        /* === Render === */
+        function render() {
+            renderTable();
+            if (S.view === 'gantt') renderGantt();
+            else renderMPM();
+            document.getElementById('projName').value = S.projectName;
+        }
+
+        function getItems() {
+            const it = [];
+            S.sections.forEach(sec => {
+                it.push({
+                    t: 'sec',
+                    sec
+                });
+                if (!sec.collapsed) S.tasks.filter(t => t.sectionId === sec.id).forEach(t => it.push({
+                    t: 'task',
+                    task: t
+                }));
+            });
+            const sids = new Set(S.sections.map(s => s.id));
+            S.tasks.filter(t => !sids.has(t.sectionId)).forEach(t => it.push({
+                t: 'task',
+                task: t
+            }));
+            return it;
+        }
+
+        function renderTable() {
+            const bd = document.getElementById('tblBody');
+            const items = getItems();
+            if (!S.tasks.length && S.sections.length <= 1) {
+                bd.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="12" height="4" rx="1"/><rect x="3" y="16" width="15" height="4" rx="1"/></svg><h3>Aucune tâche</h3><p>Ajoutez une tâche pour commencer.</p><button class="btn btn-success" onclick="addTask()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button></div>`;
+                return;
+            }
+            let h = '';
+            items.forEach(item => {
+                if (item.t === 'sec') {
+                    const s = item.sec;
+                    const c = S.tasks.filter(t => t.sectionId === s.id).length;
+                    h += `<div class="section-row ${s.collapsed?'collapsed':''}" onclick="togSec(${s.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg><input class="sec-name" type="text" value="${esc(s.name)}" onclick="event.stopPropagation()" onchange="pushU();S.sections.find(x=>x.id===${s.id}).name=this.value;save()"><span style="font-size:9.5px;color:var(--text-muted);font-weight:400">${c}</span><div class="sec-actions"><button class="btn-icon" onclick="event.stopPropagation();addTask(${s.id})" style="width:20px;height:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>${S.sections.length>1?`<button class="btn-icon" onclick="event.stopPropagation();delSec(${s.id})" style="width:20px;height:20px;color:var(--pastel-red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}</div></div>`;
+                } else {
+                    const t = item.task;
+                    const gi = S.tasks.indexOf(t);
+                    const sel = S.selId === t.id ? 'selected' : '';
+                    // Letter label
+                    const letter = String.fromCharCode(65 + gi);
+                    let dh = '<span class="dep-none">—</span>';
+                    if (t.deps?.length) dh = t.deps.map(d => {
+                        const dt = S.tasks.find(x => x.id === d);
+                        const dl = dt ? String.fromCharCode(65 + S.tasks.indexOf(dt)) : '?';
+                        return `<span class="dep-tag">${dl}</span>`;
+                    }).join('');
+                    h += `<div class="table-row ${sel}" data-id="${t.id}" onclick="S.selId=${t.id};render()" oncontextmenu="showCtx(event,${t.id})" ondblclick="editMod(${t.id})" draggable="true" ondragstart="onDS(event,${gi},${t.sectionId})" ondragover="onDO(event)" ondrop="onDR(event,${gi},${t.sectionId})" ondragend="onDE(event)"><div class="drag-handle"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg></div><div><div class="color-dot" style="background:${t.color}" onclick="event.stopPropagation();showCol(event,${t.id})"></div></div><div><input type="text" value="${esc(t.name)}" onchange="updT(${t.id},'name',this.value)" onclick="event.stopPropagation()" style="font-size:11.5px"></div><div class="date-cell mob-hide" onclick="event.stopPropagation()"><div class="date-lock ${t.dateEnabled?'active':''}" onclick="togDate(${t.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div><input type="date" value="${t.dateEnabled?t.mStart:''}" ${t.dateEnabled?'':'disabled'} onchange="updT(${t.id},'mStart',this.value)" style="${t.dateEnabled?'':'opacity:.2'}"></div><div class="date-cell mob-hide" onclick="event.stopPropagation()"><div class="date-lock ${t.dateEnabled?'active':''}" onclick="togDate(${t.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div><input type="date" value="${t.dateEnabled?t.mEnd:''}" ${t.dateEnabled?'':'disabled'} onchange="updT(${t.id},'mEnd',this.value)" style="${t.dateEnabled?'':'opacity:.2'}"></div><div onclick="event.stopPropagation()"><input type="number" min="1" value="${t.dur||1}" onchange="updT(${t.id},'dur',this.value)" style="width:36px;text-align:center;font-size:11px;color:var(--pastel-teal)"></div><div class="dep-display mob-hide" onclick="event.stopPropagation();showDep(event,${t.id})">${dh}</div><div><button class="row-del" onclick="event.stopPropagation();delT(${t.id})"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>`;
+                }
+            });
+            bd.innerHTML = h;
+        }
+
+        /* === Gantt === */
+        function getRange() {
+            let mn = pStart(),
+                mx = new Date(mn);
+            S.tasks.forEach(t => {
+                if (t._s) {
+                    const s = pD(t._s);
+                    if (s < mn) mn = new Date(s);
+                }
+                if (t._e) {
+                    const e = pD(t._e);
+                    if (e > mx) mx = new Date(e);
+                }
+            });
+            const st = new Date(mn);
+            st.setDate(st.getDate() - 3);
+            const en = new Date(mx);
+            en.setDate(en.getDate() + 14);
+            return {
+                s: st,
+                e: en,
+                d: Math.max(30, Math.ceil((en - st) / 864e5) + 1)
+            };
+        }
+
+        function renderGantt() {
+            const {
+                s: sd,
+                d: days
+            } = getRange();
+            switch (S.zoom) {
+                case 'day':
+                    cellW = 34;
+                    break;
+                case 'week':
+                    cellW = 16;
+                    break;
+                case 'month':
+                    cellW = 5;
+                    break;
+            }
+            const tw = days * cellW;
+            renderGH(sd, days, tw);
+            renderGB(sd, days, tw);
+        }
+
+        function renderGH(sd, days, tw) {
+            const hd = document.getElementById('ganttHead'),
+                t = td();
+            let mH = '',
+                dH = '',
+                cm = -1,
+                ms = 0;
+            for (let i = 0; i <= days; i++) {
+                const d = new Date(sd);
+                d.setDate(d.getDate() + i);
+                if (d.getMonth() !== cm || i === days) {
+                    if (cm !== -1) {
+                        const w = (i - ms) * cellW;
+                        const pd = new Date(sd);
+                        pd.setDate(pd.getDate() + ms);
+                        mH += `<div class="gantt-header-cell month-h" style="width:${w}px;min-width:${w}px">${MONTHS[cm].substring(0,3)} ${pd.getFullYear()}</div>`;
+                    }
+                    cm = d.getMonth();
+                    ms = i;
+                }
+                if (i < days) {
+                    const we = isWE(d),
+                        it = d.getTime() === t.getTime();
+                    let lb = '';
+                    if (S.zoom === 'day') lb = d.getDate();
+                    else if (S.zoom === 'week' && (d.getDay() === 1 || i === 0)) lb = d.getDate();
+                    dH += `<div class="gantt-header-cell ${we?'weekend':''} ${it?'today-h':''}" style="width:${cellW}px;min-width:${cellW}px;font-size:${S.zoom==='month'?0:9}px">${lb}</div>`;
+                }
+            }
+            hd.innerHTML = `<div class="gantt-header-row">${mH}</div><div class="gantt-header-row">${dH}</div>`;
+            hd.style.width = tw + 'px';
+        }
+
+        function renderGB(sd, days, tw) {
+            const gb = document.getElementById('ganttBody'),
+                t = td(),
+                rh = 40,
+                sh = 31;
+            const items = getItems();
+            let grid = '',
+                bars = '',
+                svg = '';
+            let y = 0;
+            items.forEach(item => {
+                if (item.t === 'sec') {
+                    let c = '';
+                    for (let i = 0; i < days; i++) {
+                        const d = new Date(sd);
+                        d.setDate(d.getDate() + i);
+                        c += `<div class="gantt-cell" style="width:${cellW}px;min-width:${cellW}px;background:var(--section-bg)"></div>`;
+                    }
+                    grid += `<div class="gantt-grid-row sec-spacer">${c}</div>`;
+                    y += sh;
+                } else {
+                    const tk = item.task;
+                    let c = '';
+                    for (let i = 0; i < days; i++) {
+                        const d = new Date(sd);
+                        d.setDate(d.getDate() + i);
+                        const we = isWE(d),
+                            it = d.getTime() === t.getTime();
+                        c += `<div class="gantt-cell ${we?'weekend':''} ${it?'today-c':''}" style="width:${cellW}px;min-width:${cellW}px"></div>`;
+                    }
+                    grid += `<div class="gantt-grid-row">${c}</div>`;
+                    if (tk._s && tk._e) {
+                        const ts = pD(tk._s),
+                            te = pD(tk._e);
+                        const o = Math.round((ts - sd) / 864e5),
+                            du = Math.max(1, Math.round((te - ts) / 864e5) + 1);
+                        const l = o * cellW,
+                            w = du * cellW;
+                        bars += `<div class="gantt-bar-wrap" style="left:${l}px;top:${y}px;width:${w}px" data-id="${tk.id}"><div class="gantt-bar" style="width:100%;background:${tk.color}" onmousedown="startBD(event,${tk.id})" oncontextmenu="showCtx(event,${tk.id})" ondblclick="editMod(${tk.id})" onmouseenter="showTT(event,${tk.id})" onmouseleave="hideTT()"><div class="gantt-resize l" onmousedown="startBR(event,${tk.id},'l')"></div><span class="gantt-bar-label">${esc(tk.name)}</span><div class="gantt-resize r" onmousedown="startBR(event,${tk.id},'r')"></div></div></div>`;
+                        (tk.deps || []).forEach(did => {
+                            const dep = S.tasks.find(x => x.id === did);
+                            if (!dep || !dep._e) return;
+                            let dy = 0;
+                            getItems().forEach(di => {
+                                if (di.t === 'sec') dy += sh;
+                                else {
+                                    if (di.task.id === did) dep._gy = dy + rh / 2;
+                                    dy += rh;
+                                }
+                            });
+                            const de = pD(dep._e);
+                            const x1 = (Math.round((de - sd) / 864e5) + 1) * cellW,
+                                y1 = dep._gy || 0,
+                                x2 = l,
+                                y2 = y + rh / 2,
+                                mx = x1 + 7;
+                            svg += `<path class="dep-path" d="M${x1} ${y1} L${mx} ${y1} L${mx} ${y2} L${x2} ${y2}" marker-end="url(#ah)"/>`;
+                        });
+                    }
+                    y += rh;
+                }
+            });
+            const to = Math.round((t - sd) / 864e5),
+                tl = to * cellW + cellW / 2;
+            gb.innerHTML = grid + `<div class="gantt-bars">${bars}</div><div class="today-line" style="left:${tl}px"></div><svg class="dep-svg"><defs><marker id="ah" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><polygon class="dep-arrowhead" points="0 0,6 2,0 4"/></marker></defs>${svg}</svg>`;
+            gb.style.width = tw + 'px';
+            document.getElementById('ganttCont').style.width = tw + 'px';
+        }
+
+        /* === MPM Graph === */
+        function renderMPM() {
+            const mp = document.getElementById('mpmPanel');
+            if (!S.tasks.length) {
+                mp.innerHTML = '<div class="empty-state"><h3>Aucune tâche</h3><p>Ajoutez des tâches pour voir le graphe MPM.</p></div>';
+                return;
+            }
+
+            // Assign letters
+            const tasks = S.tasks;
+            const nodeW = 140,
+                nodeH = 74,
+                gapX = 60,
+                gapY = 50,
+                padL = 20,
+                padT = 60;
+
+            // Build levels using topological sort
+            const m = {};
+            tasks.forEach(t => m[t.id] = t);
+            const levels = {};
+            const placed = new Set();
+
+            function getLevel(t, visited = new Set()) {
+                if (levels[t.id] !== undefined) return levels[t.id];
+                if (visited.has(t.id)) return 0;
+                visited.add(t.id);
+                if (!t.deps || !t.deps.length) {
+                    levels[t.id] = 0;
+                    return 0;
+                }
+                let maxL = 0;
+                t.deps.forEach(d => {
+                    const dep = m[d];
+                    if (dep) maxL = Math.max(maxL, getLevel(dep, visited) + 1);
+                });
+                levels[t.id] = maxL;
+                return maxL;
+            }
+            tasks.forEach(t => getLevel(t));
+
+            // Group by level
+            const byLevel = {};
+            tasks.forEach(t => {
+                const l = levels[t.id] || 0;
+                if (!byLevel[l]) byLevel[l] = [];
+                byLevel[l].push(t);
+            });
+            const maxLevel = Math.max(...Object.keys(byLevel).map(Number));
+
+            // Position nodes
+            const positions = {};
+            for (let l = 0; l <= maxLevel; l++) {
+                const col = byLevel[l] || [];
+                col.forEach((t, i) => {
+                    positions[t.id] = {
+                        x: padL + l * (nodeW + gapX),
+                        y: padT + i * (nodeH + gapY)
+                    };
+                });
+            }
+
+            // Calculate canvas size
+            let maxX = 0,
+                maxY = 0;
+            Object.values(positions).forEach(p => {
+                if (p.x + nodeW > maxX) maxX = p.x + nodeW;
+                if (p.y + nodeH > maxY) maxY = p.y + nodeH;
+            });
+
+            // Generate HTML
+            let nodesH = '';
+            let arrowsH = '';
+
+            tasks.forEach((t, idx) => {
+                const pos = positions[t.id];
+                const letter = String.fromCharCode(65 + idx);
+                const isCritical = t._margin === 0;
+                const es = t._es !== undefined ? t._es : '—';
+                const ls = t._ls !== undefined ? t._ls : '—';
+                const margin = t._margin !== undefined ? t._margin : '—';
+
+                nodesH += `<div class="mpm-node ${isCritical?'critical':''}" style="left:${pos.x}px;top:${pos.y}px;border-left:3px solid ${t.color}">
+      <div class="mpm-node-header">
+        <div>${letter}</div>
+        <div>${es}</div>
+      </div>
+      <div class="mpm-node-body" title="${esc(t.name)}">${esc(t.name)}</div>
+      <div class="mpm-node-footer">
+        <div>${ls}</div>
+        <div class="${margin===0?'marge-zero':'marge-pos'}">${margin}</div>
+      </div>
+    </div>`;
+
+                // Arrows
+                (t.deps || []).forEach(did => {
+                    const dp = positions[did];
+                    if (!dp) return;
+                    const x1 = dp.x + nodeW,
+                        y1 = dp.y + nodeH / 2;
+                    const x2 = pos.x,
+                        y2 = pos.y + nodeH / 2;
+                    const cx1 = x1 + (x2 - x1) * 0.5,
+                        cy1 = y1,
+                        cx2 = x1 + (x2 - x1) * 0.5,
+                        cy2 = y2;
+                    const depTask = m[did];
+                    const isCritPath = depTask && depTask._margin === 0 && t._margin === 0;
+                    arrowsH += `<path d="M${x1} ${y1} C${cx1} ${cy1} ${cx2} ${cy2} ${x2} ${y2}" fill="none" stroke="${isCritPath?'var(--pastel-red)':'var(--text-muted)'}" stroke-width="${isCritPath?2:1.5}" opacity="${isCritPath?0.8:0.4}" marker-end="url(#mpm-ah)"/>`;
+                });
+            });
+
+            mp.innerHTML = `
+    <div class="mpm-legend">
+      <div class="mpm-legend-item"><div class="mpm-legend-box" style="border-left:3px solid var(--pastel-blue)"></div>Tâche</div>
+      <div class="mpm-legend-item"><div class="mpm-legend-box crit"></div>Chemin critique (marge = 0)</div>
+      <div class="mpm-legend-item" style="font-size:10px;color:var(--text-muted)">↖ Lettre | Début tôt ↗ | ↙ Début tard | Marge ↘</div>
+    </div>
+    <div class="mpm-canvas" style="width:${maxX+40}px;height:${maxY+40}px">
+      <svg class="mpm-arrow-svg" width="${maxX+40}" height="${maxY+40}">
+        <defs><marker id="mpm-ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="var(--text-muted)" opacity="0.5"/></marker></defs>
+        ${arrowsH}
+      </svg>
+      ${nodesH}
+    </div>`;
+        }
+
+        /* === Bar Drag/Resize === */
+        function startBD(e, id) {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const t = S.tasks.find(x => x.id === id);
+            if (!t) return;
+            pushU();
+            if (!t.dateEnabled) {
+                t.dateEnabled = true;
+                t.mStart = t._s;
+                t.mEnd = t._e;
+            }
+            dragD = {
+                id,
+                sx: e.clientX,
+                oS: t.mStart,
+                oE: t.mEnd,
+                mode: 'm'
+            };
+            document.addEventListener('mousemove', onBD);
+            document.addEventListener('mouseup', onBDE);
+        }
+
+        function startBR(e, id, dir) {
+            e.preventDefault();
+            e.stopPropagation();
+            const t = S.tasks.find(x => x.id === id);
+            if (!t) return;
+            pushU();
+            if (!t.dateEnabled) {
+                t.dateEnabled = true;
+                t.mStart = t._s;
+                t.mEnd = t._e;
+            }
+            dragD = {
+                id,
+                sx: e.clientX,
+                oS: t.mStart,
+                oE: t.mEnd,
+                mode: 'r',
+                dir
+            };
+            document.addEventListener('mousemove', onBD);
+            document.addEventListener('mouseup', onBDE);
+        }
+
+        function onBD(e) {
+            if (!dragD) return;
+            const dx = e.clientX - dragD.sx,
+                dd = Math.round(dx / cellW);
+            if (dd === dragD._l) return;
+            dragD._l = dd;
+            const t = S.tasks.find(x => x.id === dragD.id);
+            if (!t) return;
+            if (dragD.mode === 'm') {
+                const ns = new Date(pD(dragD.oS));
+                ns.setDate(ns.getDate() + dd);
+                const ne = new Date(pD(dragD.oE));
+                ne.setDate(ne.getDate() + dd);
+                if (canStart(t, ns)) {
+                    t.mStart = fmt(ns);
+                    t.mEnd = fmt(ne);
+                    t.dur = wdBetween(pD(t.mStart), pD(t.mEnd));
+                }
+            } else {
+                if (dragD.dir === 'l') {
+                    const ns = new Date(pD(dragD.oS));
+                    ns.setDate(ns.getDate() + dd);
+                    if (ns <= pD(t.mEnd) && canStart(t, ns)) {
+                        t.mStart = fmt(ns);
+                        t.dur = wdBetween(pD(t.mStart), pD(t.mEnd));
+                    }
+                } else {
+                    const ne = new Date(pD(dragD.oE));
+                    ne.setDate(ne.getDate() + dd);
+                    if (ne >= pD(t.mStart)) {
+                        t.mEnd = fmt(ne);
+                        t.dur = wdBetween(pD(t.mStart), pD(t.mEnd));
+                    }
+                }
+            }
+            recalc();
+            render();
+        }
+
+        function onBDE() {
+            dragD = null;
+            save();
+            document.removeEventListener('mousemove', onBD);
+            document.removeEventListener('mouseup', onBDE);
+        }
+
+        /* === Row Drag === */
+        let dri = null;
+
+        function onDS(e, i, s) {
+            dri = i;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', i);
+        }
+
+        function onDO(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function onDR(e, ti, ts) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if (dri === null || dri === ti) return;
+            moveT(dri, ti, ts);
+            dri = null;
+        }
+
+        function onDE() {
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            dri = null;
+        }
+
+        /* === Tooltip === */
+        function showTT(e, id) {
+            const t = S.tasks.find(x => x.id === id);
+            if (!t) return;
+            const tt = document.getElementById('tooltip');
+            const idx = S.tasks.indexOf(t);
+            const letter = String.fromCharCode(65 + idx);
+            tt.innerHTML = `<div class="tt-name" style="color:${t.color}">${letter}. ${esc(t.name)}</div><div class="tt-row"><span>Début</span><span>${t._s||'—'}</span></div><div class="tt-row"><span>Fin</span><span>${t._e||'—'}</span></div><div class="tt-row"><span>Durée</span><span>${t.dur||1}j</span></div><div class="tt-row"><span>Marge</span><span>${t._margin!==undefined?t._margin:'—'}</span></div>`;
+            tt.style.left = Math.min(e.clientX + 10, innerWidth - 230) + 'px';
+            tt.style.top = (e.clientY + 10) + 'px';
+            tt.classList.add('visible');
+        }
+
+        function hideTT() {
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        /* === Popups === */
+        function showDep(e, id) {
+            e.stopPropagation();
+            hidePops();
+            const pop = document.getElementById('depPop');
+            const t = S.tasks.find(x => x.id === id);
+            if (!t) return;
+            const ot = S.tasks.filter(x => x.id !== id);
+            if (!ot.length) {
+                pop.innerHTML = '<div style="padding:8px;font-size:11px;color:var(--text-muted)">Aucune</div>';
+            } else {
+                pop.innerHTML = ot.map((o, i) => {
+                    const l = String.fromCharCode(65 + S.tasks.indexOf(o));
+                    return `<label class="dep-item" onclick="event.stopPropagation()"><input type="checkbox" ${(t.deps||[]).includes(o.id)?'checked':''} onchange="togDep(${id},${o.id},this.checked)"><span style="width:6px;height:6px;border-radius:50%;background:${o.color};flex-shrink:0"></span>${l}. ${esc(o.name.substring(0,18))}</label>`;
+                }).join('');
+            }
+            const r = e.target.getBoundingClientRect();
+            pop.style.left = Math.min(r.left, innerWidth - 180) + 'px';
+            pop.style.top = (r.bottom + 2) + 'px';
+            pop.classList.add('visible');
+        }
+
+        function togDep(tid, did, ch) {
+            const t = S.tasks.find(x => x.id === tid);
+            if (!t) return;
+            if (ch && hasCycle(tid, did)) {
+                toast('Cycle détecté !', 'error');
+                render();
+                return;
+            }
+            let d = [...(t.deps || [])];
+            if (ch) {
+                if (!d.includes(did)) d.push(did);
+            } else d = d.filter(x => x !== did);
+            pushU();
+            t.deps = d;
+            recalc();
+            save();
+            render();
+        }
+
+        function showCol(e, id) {
+            e.stopPropagation();
+            hidePops();
+            const pop = document.getElementById('colPop');
+            const t = S.tasks.find(x => x.id === id);
+            pop.innerHTML = `<div class="color-popup-grid">${COLORS.map(c=>`<div class="color-popup-dot ${t&&t.color===c?'sel':''}" style="background:${c}" onclick="event.stopPropagation();pushU();const t=S.tasks.find(x=>x.id===${id});if(t)t.color='${c}';save();render();hidePops()"></div>`).join('')}</div>`;
+            const r = e.target.getBoundingClientRect();
+            pop.style.left = Math.min(r.left, innerWidth - 110) + 'px';
+            pop.style.top = (r.bottom + 2) + 'px';
+            pop.classList.add('visible');
+        }
+
+        function hidePops() {
+            document.getElementById('depPop').classList.remove('visible');
+            document.getElementById('colPop').classList.remove('visible');
+        }
+
+        /* === Context menu === */
+        function showCtx(e, id) {
+            e.preventDefault();
+            e.stopPropagation();
+            CTX = id;
+            const m = document.getElementById('ctxMenu');
+            m.style.left = e.clientX + 'px';
+            m.style.top = e.clientY + 'px';
+            m.classList.add('visible');
+        }
+
+        function hideCtx() {
+            document.getElementById('ctxMenu').classList.remove('visible');
+        }
+
+        /* === Modal === */
+        function editMod(id) {
+            const t = S.tasks.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('modId').value = id;
+            document.getElementById('modName').value = t.name;
+            document.getElementById('modStart').value = t.dateEnabled ? t.mStart : '';
+            document.getElementById('modEnd').value = t.dateEnabled ? t.mEnd : '';
+            document.getElementById('modDur').value = t.dur || 1;
+            document.getElementById('modTitle').textContent = 'Modifier : ' + t.name;
+            document.getElementById('modSec').innerHTML = S.sections.map(s => `<option value="${s.id}" ${t.sectionId===s.id?'selected':''}>${esc(s.name)}</option>`).join('');
+            document.getElementById('modDeps').innerHTML = S.tasks.filter(x => x.id !== id).map((x, i) => `<option value="${x.id}" ${(t.deps||[]).includes(x.id)?'selected':''}>${String.fromCharCode(65+S.tasks.indexOf(x))}. ${esc(x.name)}</option>`).join('');
+            const cc = document.getElementById('modCols');
+            cc.innerHTML = COLORS.map(c => `<div class="color-opt ${t.color===c?'sel':''}" style="background:${c}" onclick="this.parentElement.querySelectorAll('.color-opt').forEach(x=>x.classList.remove('sel'));this.classList.add('sel')"></div>`).join('');
+            document.getElementById('modOvl').classList.add('active');
+            hideCtx();
+            hidePops();
+        }
+
+        function closeMod() {
+            document.getElementById('modOvl').classList.remove('active');
+        }
+
+        function saveMod() {
+            const id = parseInt(document.getElementById('modId').value);
+            const t = S.tasks.find(x => x.id === id);
+            if (!t) return;
+            pushU();
+            t.name = document.getElementById('modName').value;
+            const sv = document.getElementById('modStart').value,
+                ev = document.getElementById('modEnd').value;
+            if (sv || ev) {
+                t.dateEnabled = true;
+                t.mStart = sv || fmt(pStart());
+                t.mEnd = ev || sv;
+            } else t.dateEnabled = false;
+            t.dur = Math.max(1, parseInt(document.getElementById('modDur').value) || 1);
+            t.sectionId = parseInt(document.getElementById('modSec').value) || S.sections[0]?.id;
+            const ds = document.getElementById('modDeps');
+            t.deps = Array.from(ds.selectedOptions).map(o => parseInt(o.value)).filter(d => !hasCycle(id, d));
+            const sc = document.querySelector('#modCols .color-opt.sel');
+            if (sc) {
+                let bg = sc.style.background;
+                if (bg.startsWith('rgb')) bg = rgbH(bg);
+                t.color = bg;
+            }
+            if (t.dateEnabled && t.mStart && t.mEnd) t.dur = wdBetween(pD(t.mStart), pD(t.mEnd));
+            recalc();
+            save();
+            render();
+            closeMod();
+            toast('OK', 'success');
+        }
+
+        /* === Settings === */
+        function openSet() {
+            const sb = document.getElementById('setBody');
+            const wd = S.settings.weekendDays || [];
+            sb.innerHTML = `<div class="settings-group"><h4>Thème</h4><div class="toggle-row"><span>Mode sombre</span><div class="toggle-switch ${S.settings.theme==='dark'?'on':''}" onclick="pushU();S.settings.theme=S.settings.theme==='dark'?'light':'dark';applyTheme();save();openSet()"></div></div></div><div class="settings-group"><h4>Jours de repos</h4><p style="font-size:10.5px;color:var(--text-muted);margin-bottom:5px">Les tâches ne seront pas planifiées ces jours.</p><div class="day-chips">${DAYS_FULL.map((d,i)=>`<div class="day-chip ${wd.includes(i)?'active':''}" onclick="togWE(${i})">${d}</div>`).join('')}</div></div><div class="settings-group"><h4>Données</h4><div style="margin-top:5px"><button class="btn btn-sm btn-danger-text" onclick="if(confirm('Réinitialiser ?')){pushU();S.tasks=[];S.sections=[{id:1,name:'Général',collapsed:false}];S.nextId=1;recalc();save();render();closeSet();toast('Réinitialisé','warning')}">Réinitialiser</button></div></div>`;
+            document.getElementById('setOvl').classList.add('active');
+        }
+
+        function closeSet() {
+            document.getElementById('setOvl').classList.remove('active');
+        }
+
+        function togWE(i) {
+            pushU();
+            const w = S.settings.weekendDays;
+            const x = w.indexOf(i);
+            if (x >= 0) w.splice(x, 1);
+            else w.push(i);
+            recalc();
+            save();
+            render();
+            openSet();
+        }
+
+        function applyTheme() {
+            document.body.setAttribute('data-theme', S.settings.theme || 'dark');
+        }
+
+        /* === Zoom === */
+        function setZoom(z) {
+            S.zoom = z;
+            document.querySelectorAll('.zoom-controls .btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('z-' + z)?.classList.add('active');
+            render();
+        }
+
+        /* === Import/Export === */
+        function pickF(t) {
+            impType = t;
+            const i = document.getElementById('fileIn');
+            i.accept = t === 'json' ? '.json' : '.csv';
+            i.click();
+            closeDD();
+        }
+
+        function handleImp(e) {
+            const f = e.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = ev => {
+                try {
+                    if (impType === 'json') {
+                        const d = JSON.parse(ev.target.result);
+                        if (d.tasks) {
+                            pushU();
+                            Object.assign(S, d);
+                            recalc();
+                            save();
+                            render();
+                            toast(S.tasks.length + ' tâches', 'success');
+                        } else throw 0;
+                    } else {
+                        const ls = ev.target.result.split('\n').filter(l => l.trim());
+                        if (ls.length < 2) {
+                            toast('CSV vide', 'error');
+                            return;
+                        }
+                        pushU();
+                        const hd = ls[0].split(/[,;]/).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                        const ts = [];
+                        for (let i = 1; i < ls.length; i++) {
+                            const v = ls[i].split(/[,;]/).map(x => x.trim().replace(/"/g, ''));
+                            if (!v.length) continue;
+                            const ni = hd.findIndex(h => h.includes('nom') || h.includes('name'));
+                            const di = hd.findIndex(h => h.includes('dur'));
+                            ts.push({
+                                id: S.nextId++,
+                                name: v[ni >= 0 ? ni : 0] || 'Sans nom',
+                                dateEnabled: false,
+                                mStart: '',
+                                mEnd: '',
+                                dur: parseInt(v[di >= 0 ? di : 1]) || 5,
+                                deps: [],
+                                color: COLORS[ts.length % COLORS.length],
+                                sectionId: S.sections[0]?.id || 1
+                            });
+                        }
+                        S.tasks = ts;
+                        recalc();
+                        save();
+                        render();
+                        toast(ts.length + ' tâches', 'success');
+                    }
+                } catch (er) {
+                    console.error(er);
+                    toast('Erreur', 'error');
+                }
+            };
+            r.readAsText(f);
+            e.target.value = '';
+        }
+
+        function doExp(t) {
+            closeDD();
+            if (t === 'csv') {
+                const h = 'Nom,Début,Fin,Durée,Couleur';
+                const r = S.tasks.map(t => `"${t.name}",${t._s||''},${t._e||''},${t.dur||1},${t.color}`);
+                dl([h, ...r].join('\n'), S.projectName + '.csv', 'text/csv;charset=utf-8;');
+                toast('CSV', 'success');
+            } else if (t === 'json') {
+                dl(JSON.stringify(S, null, 2), S.projectName + '.json', 'application/json');
+                toast('JSON', 'success');
+            } else if (t === 'excel') {
+                let x = '<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Gantt"><Table>\n<Row>' + ['Nom', 'Début', 'Fin', 'Durée', 'Marge', 'Couleur'].map(h => `<Cell><Data ss:Type="String">${h}</Data></Cell>`).join('') + '</Row>\n';
+                S.tasks.forEach(t => {
+                    x += `<Row><Cell><Data ss:Type="String">${escX(t.name)}</Data></Cell><Cell><Data ss:Type="String">${t._s||''}</Data></Cell><Cell><Data ss:Type="String">${t._e||''}</Data></Cell><Cell><Data ss:Type="Number">${t.dur||1}</Data></Cell><Cell><Data ss:Type="Number">${t._margin!==undefined?t._margin:''}</Data></Cell><Cell><Data ss:Type="String">${t.color}</Data></Cell></Row>\n`;
+                });
+                x += '</Table></Worksheet></Workbook>';
+                dl(x, S.projectName + '.xls', 'application/vnd.ms-excel');
+                toast('Excel', 'success');
+            } else if (t === 'png') {
+                expPNG();
+            }
+        }
+
+        function expPNG() {
+            if (!S.tasks.length) {
+                toast('Rien', 'warning');
+                return;
+            }
+            toast('...', 'warning');
+            setTimeout(() => {
+                try {
+                    const {
+                        s: sd,
+                        d: days
+                    } = getRange();
+                    const p = 20,
+                        tH = 40,
+                        rH = 26,
+                        tW = 230,
+                        pxD = Math.max(3, Math.min(14, 600 / days)),
+                        gW = days * pxD,
+                        cH = S.tasks.length * rH + 30,
+                        W = tW + gW + p * 3,
+                        H = cH + tH + p * 2;
+                    const cv = document.createElement('canvas');
+                    cv.width = W;
+                    cv.height = H;
+                    const c = cv.getContext('2d');
+                    const dk = S.settings.theme === 'dark';
+                    c.fillStyle = dk ? '#1a1b2e' : '#f0f2f5';
+                    c.fillRect(0, 0, W, H);
+                    c.fillStyle = dk ? '#e2e4f0' : '#1e293b';
+                    c.font = 'bold 16px sans-serif';
+                    c.fillText(S.projectName, p, p + 18);
+                    c.fillStyle = dk ? '#5c6080' : '#94a3b8';
+                    c.font = '9px sans-serif';
+                    c.fillText('Gantt-Vortex • ' + new Date().toLocaleDateString('fr-FR'), p, p + 32);
+                    const sy = p + tH,
+                        gx = p + tW + p;
+                    S.tasks.forEach((t, i) => {
+                        const y = sy + i * rH;
+                        if (i % 2 === 0) {
+                            c.fillStyle = dk ? '#1e2039' : '#f7f8fa';
+                            c.fillRect(p, y, tW, rH);
+                        }
+                        c.fillStyle = t.color;
+                        c.beginPath();
+                        c.arc(p + 8, y + rH / 2, 3, 0, Math.PI * 2);
+                        c.fill();
+                        c.fillStyle = dk ? '#e2e4f0' : '#1e293b';
+                        c.font = '10px sans-serif';
+                        c.fillText(String.fromCharCode(65 + i) + '. ' + t.name.substring(0, 24), p + 16, y + rH / 2 + 3);
+                        if (t._s && t._e) {
+                            const ts = pD(t._s),
+                                te = pD(t._e),
+                                o = (ts - sd) / 864e5,
+                                du = Math.max(1, (te - ts) / 864e5 + 1),
+                                bx = gx + o * pxD,
+                                bw = du * pxD;
+                            c.fillStyle = t.color;
+                            c.beginPath();
+                            if (c.roundRect) c.roundRect(bx, y + 3, bw, rH - 6, 3);
+                            else c.rect(bx, y + 3, bw, rH - 6);
+                            c.fill();
+                            if (bw > 25) {
+                                c.fillStyle = dk ? '#141525' : '#fff';
+                                c.font = 'bold 8px sans-serif';
+                                c.fillText(t.name.substring(0, Math.floor(bw / 5)), bx + 3, y + rH / 2 + 2);
+                            }
+                        }
+                    });
+                    cv.toBlob(b => {
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(b);
+                        a.download = S.projectName + '.png';
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                        toast('PNG', 'success');
+                    });
+                } catch (e) {
+                    console.error(e);
+                    toast('Erreur', 'error');
+                }
+            }, 100);
+        }
+
+        /* === Undo/Redo === */
+        function undo() {
+            if (!undoS.length) {
+                toast('Rien', 'warning');
+                return;
+            }
+            redoS.push(JSON.stringify(S));
+            S = JSON.parse(undoS.pop());
+            recalc();
+            render();
+            toast('Annulé', 'success');
+        }
+
+        function redo() {
+            if (!redoS.length) {
+                toast('Rien', 'warning');
+                return;
+            }
+            undoS.push(JSON.stringify(S));
+            S = JSON.parse(redoS.pop());
+            recalc();
+            render();
+            toast('Rétabli', 'success');
+        }
+
+        /* === Persistence === */
+        function save() {
+            S.projectName = document.getElementById('projName').value;
+            try {
+                localStorage.setItem('gf', JSON.stringify(S))
+            } catch (e) {}
+        }
+
+        function saveLS() {
+            save();
+            toast('Sauvegardé', 'success');
+        }
+
+        function loadLS() {
+            try {
+                const d = localStorage.getItem('gf');
+                if (d) {
+                    const p = JSON.parse(d);
+                    S = {
+                        ...S,
+                        ...p
+                    };
+                    if (!S.settings) S.settings = {
+                        weekendDays: [5, 6],
+                        theme: 'dark'
+                    };
+                    if (!S.sections?.length) S.sections = [{
+                        id: 1,
+                        name: 'Général',
+                        collapsed: false
+                    }];
+                    if (!S.view) S.view = 'gantt';
+                }
+            } catch (e) {}
+        }
+
+        /* === Utils === */
+        function esc(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        function escX(t) {
+            return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function rgbH(r) {
+            const m = r.match(/(\d+)/g);
+            return m ? '#' + m.slice(0, 3).map(x => (+x).toString(16).padStart(2, '0')).join('') : r;
+        }
+
+        function dl(c, n, t) {
+            const b = new Blob([c], {
+                    type: t
+                }),
+                a = document.createElement('a');
+            a.href = URL.createObjectURL(b);
+            a.download = n;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        }
+
+        function toast(m, t = 'info') {
+            const c = document.getElementById('toastBox'),
+                el = document.createElement('div');
+            el.className = `toast ${t}`;
+            const ic = {
+                success: '<polyline points="20,6 9,17 4,12"/>',
+                error: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+                warning: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+            };
+            el.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ic[t]||ic.warning}</svg>${m}`;
+            c.appendChild(el);
+            setTimeout(() => {
+                el.style.animation = 'tOut .2s ease forwards';
+                setTimeout(() => el.remove(), 200);
+            }, 2000);
+        }
+
+        function toggleDD(id) {
+            const m = document.getElementById(id);
+            const a = m.classList.contains('active');
+            closeDD();
+            if (!a) m.classList.add('active');
+        }
+
+        function closeDD() {
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active'));
+        }
+
+        function setupClicks() {
+            document.addEventListener('click', e => {
+                if (!e.target.closest('.dropdown')) closeDD();
+                if (!e.target.closest('.ctx-menu')) hideCtx();
+                if (!e.target.closest('.dep-popup') && !e.target.closest('.dep-display')) document.getElementById('depPop').classList.remove('visible');
+                if (!e.target.closest('.color-popup') && !e.target.closest('.color-dot')) document.getElementById('colPop').classList.remove('visible');
+                if (e.target.id === 'modOvl') closeMod();
+                if (e.target.id === 'setOvl') closeSet();
+            });
+        }
+
+        function setupKeys() {
+            document.addEventListener('keydown', e => {
+                const inp = e.target.closest('input,select,textarea');
+                if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    undo();
+                }
+                if (e.ctrlKey && e.key === 'y') {
+                    e.preventDefault();
+                    redo();
+                }
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    saveLS();
+                }
+                if (e.key === 'Delete' && S.selId && !inp) delT(S.selId);
+                if (e.key === 'Escape') {
+                    closeMod();
+                    closeSet();
+                    hideCtx();
+                    closeDD();
+                    hidePops();
+                }
+                if (e.key === 'n' && !inp) {
+                    e.preventDefault();
+                    addTask();
+                }
+            });
+        }
+
+        function setupResize() {
+            const rs = document.getElementById('resizer'),
+                pn = document.getElementById('tblPanel');
+            let a = false,
+                sx, sw;
+            rs.addEventListener('mousedown', e => {
+                a = true;
+                sx = e.clientX;
+                sw = pn.offsetWidth;
+                rs.classList.add('active');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            });
+            document.addEventListener('mousemove', e => {
+                if (!a) return;
+                pn.style.width = Math.max(340, Math.min(800, sw + e.clientX - sx)) + 'px';
+            });
+            document.addEventListener('mouseup', () => {
+                if (a) {
+                    a = false;
+                    rs.classList.remove('active');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+        }
+
+        function setupScrollSync() {
+            const tb = document.getElementById('tblBody'),
+                gp = document.getElementById('ganttPanel');
+            let s = false;
+            tb.addEventListener('scroll', () => {
+                if (s) return;
+                s = true;
+                gp.scrollTop = tb.scrollTop;
+                requestAnimationFrame(() => s = false);
+            });
+            gp.addEventListener('scroll', () => {
+                if (s) return;
+                s = true;
+                tb.scrollTop = gp.scrollTop;
+                requestAnimationFrame(() => s = false);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
